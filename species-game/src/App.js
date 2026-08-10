@@ -1,107 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
-
-// Adafruit IO Configuration
-const ADAFRUIT_USERNAME = 'justwezzie';
-const ADAFRUIT_IO_URL = 'https://io.adafruit.com/api/v2';
-const ADAFRUIT_IO_KEY = process.env.REACT_APP_ADAFRUIT_IO_KEY;
 
 export default function SpeciesGameUI() {
   const [activeTab, setActiveTab] = useState('species-cards');
-  const [activeLiveData, setActiveLiveData] = useState('temperature');
   const [selectedSpecies, setSelectedSpecies] = useState(null);
   const [selectedOrganism, setSelectedOrganism] = useState(null);
-
-  // Adafruit IO feed data state
-  const [feedData, setFeedData] = useState({
-    temperature: { value: null, history: [], lastUpdated: null, loading: true, error: null },
-    humidity: { value: null, history: [], lastUpdated: null, loading: true, error: null },
-    'soil-moisture': { value: null, lastUpdated: null, loading: true, error: null }
-  });
-
-
-  // Fetch Adafruit IO feed data
-  useEffect(() => {
-    const feedConfigs = [
-      { key: 'temperature', limit: 25 },
-      { key: 'humidity', limit: 25 },
-      { key: 'soil-moisture', limit: 1 }
-    ];
-
-    const fetchFeedData = async (feedKey, limit) => {
-      try {
-        const headers = {};
-        if (ADAFRUIT_IO_KEY) {
-          headers['X-AIO-Key'] = ADAFRUIT_IO_KEY;
-        }
-
-        const response = await fetch(
-          `${ADAFRUIT_IO_URL}/${ADAFRUIT_USERNAME}/feeds/${feedKey}/data?limit=${limit}`,
-          { headers }
-        );
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch ${feedKey}: ${response.status}`);
-        }
-
-        const dataArray = await response.json();
-
-        if (dataArray.length === 0) {
-          throw new Error(`No data available for ${feedKey}`);
-        }
-
-        const latestData = dataArray[0];
-
-        if (limit > 1) {
-          // For temperature and humidity, store history (reverse to show oldest first)
-          const history = dataArray.map(d => parseFloat(d.value)).reverse();
-          setFeedData(prev => ({
-            ...prev,
-            [feedKey]: {
-              value: parseFloat(latestData.value),
-              history: history,
-              lastUpdated: new Date(latestData.created_at),
-              loading: false,
-              error: null
-            }
-          }));
-        } else {
-          // For soil-moisture, just store the single value
-          setFeedData(prev => ({
-            ...prev,
-            [feedKey]: {
-              value: parseFloat(latestData.value),
-              lastUpdated: new Date(latestData.created_at),
-              loading: false,
-              error: null
-            }
-          }));
-        }
-      } catch (error) {
-        console.error(`Error fetching ${feedKey}:`, error);
-        setFeedData(prev => ({
-          ...prev,
-          [feedKey]: {
-            ...prev[feedKey],
-            loading: false,
-            error: error.message
-          }
-        }));
-      }
-    };
-
-    const fetchAllFeeds = () => {
-      feedConfigs.forEach(({ key, limit }) => fetchFeedData(key, limit));
-    };
-
-    // Initial fetch
-    fetchAllFeeds();
-
-    // Refresh every 30 seconds
-    const intervalId = setInterval(fetchAllFeeds, 30000);
-
-    return () => clearInterval(intervalId);
-  }, []);
 
   const species = [
     { name: 'Bacteria', icon: '🦠', description: 'Microscopic organisms that play crucial roles in decomposition and nutrient cycling.' },
@@ -190,75 +93,6 @@ export default function SpeciesGameUI() {
     { id: 'how-to-play', label: 'How to Play' }
   ];
 
-  const liveDataTabs = [
-    { id: 'temperature', label: 'Temperature', unit: '°C', icon: '🌡️' },
-    { id: 'humidity', label: 'Humidity', unit: '%', icon: '💧' },
-    { id: 'soil-moisture', label: 'Soil Moisture', unit: '%', icon: '🌱' }
-  ];
-
-  // Helper function to format the last updated time
-  const formatLastUpdated = (date) => {
-    if (!date) return '';
-    const now = new Date();
-    const diffMs = now - date;
-    const diffSecs = Math.floor(diffMs / 1000);
-    const diffMins = Math.floor(diffSecs / 60);
-    const diffHours = Math.floor(diffMins / 60);
-
-    if (diffSecs < 60) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return date.toLocaleDateString();
-  };
-
-  // Get current tab info
-  const getCurrentTabInfo = () => {
-    return liveDataTabs.find(tab => tab.id === activeLiveData) || liveDataTabs[0];
-  };
-
-  // Simple line graph component
-  const LineGraph = ({ data, color = '#6ef1f9' }) => {
-    if (!data || data.length === 0) return null;
-
-    const width = 280;
-    const height = 60;
-    const padding = 5;
-
-    const minVal = Math.min(...data);
-    const maxVal = Math.max(...data);
-    const range = maxVal - minVal || 1;
-
-    const points = data.map((val, i) => {
-      const x = padding + (i / (data.length - 1)) * (width - 2 * padding);
-      const y = height - padding - ((val - minVal) / range) * (height - 2 * padding);
-      return `${x},${y}`;
-    }).join(' ');
-
-    return (
-      <svg width={width} height={height} className="w-full">
-        <polyline
-          fill="none"
-          stroke={color}
-          strokeWidth="2"
-          points={points}
-        />
-        {data.map((val, i) => {
-          const x = padding + (i / (data.length - 1)) * (width - 2 * padding);
-          const y = height - padding - ((val - minVal) / range) * (height - 2 * padding);
-          return (
-            <circle
-              key={i}
-              cx={x}
-              cy={y}
-              r="3"
-              fill={color}
-            />
-          );
-        })}
-      </svg>
-    );
-  };
-
   return (
     <div className="flex h-screen w-full bg-neutral-900 text-white relative overflow-hidden m-0 p-0 gap-0">
       {/* Organism Card Modal */}
@@ -300,13 +134,13 @@ export default function SpeciesGameUI() {
                     ×
                   </button>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div>
                     <h3 className="text-lg font-semibold mb-2 text-neutral-300">Description</h3>
                     <p className="text-neutral-400">{selectedOrganism.description}</p>
                   </div>
-                  
+
                   <div>
                     <h3 className="text-lg font-semibold mb-2 text-neutral-300">Environmental Preferences</h3>
                     <div className="space-y-2 text-neutral-400">
@@ -354,13 +188,13 @@ export default function SpeciesGameUI() {
                 ×
               </button>
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <h3 className="text-lg font-semibold mb-2 text-neutral-300">Description</h3>
                 <p className="text-neutral-400">{selectedSpecies.description}</p>
               </div>
-              
+
               <div>
                 <h3 className="text-lg font-semibold mb-2 text-neutral-300">Optimal Conditions</h3>
                 <div className="space-y-2 text-neutral-400">
@@ -393,7 +227,7 @@ export default function SpeciesGameUI() {
       {/* Left Panel */}
       <div className="w-2/6 p-6 flex flex-col overflow-hidden">
         {/* Scrollable Content Area */}
-        <div className="flex-2 overflow-y-auto pr-2 pb-4">
+        <div className="flex-1 overflow-y-auto pr-2 pb-4">
           {/* Species Section */}
           <div className="mb-8">
             <h2 className="text-2xl font-bold mb-4">Species</h2>
@@ -429,7 +263,7 @@ export default function SpeciesGameUI() {
           </div>
 
           {activeTab === 'species-cards' && (
-            <div className="mb-8 overflow-y-auto max-h-96">
+            <div className="mb-8">
               <div className="grid grid-cols-3 gap-2">
                 {organisms.map((org, i) => (
                   <button
@@ -446,114 +280,30 @@ export default function SpeciesGameUI() {
           )}
 
           {activeTab === 'how-to-play' && (
-            <div className="mb-6 text-neutral-400 space-y-4 overflow-y-auto max-h-48 pr-2">
+            <div className="mb-6 text-neutral-400 space-y-4">
               <p>
-                In this game, you'll manage environmental 
+                In this game, you'll manage environmental
                 parameters to create optimal conditions for various organisms to thrive.
               </p>
               <p>
-                Adjust the pH, temperature, and humidity levels using the sliders in the Parameters 
+                Adjust the pH, temperature, and humidity levels using the sliders in the Parameters
                 tab. Each organism has its own preferred environmental conditions.
               </p>
               <p>
-                Explore different species and organisms by clicking on them to learn more about their 
-                characteristics and optimal living conditions. 
+                Explore different species and organisms by clicking on them to learn more about their
+                characteristics and optimal living conditions.
               </p>
             </div>
           )}
         </div>
-
-        {/* Fixed Live Data Section */}
-        <div className="mt-1 pt-4 border-t border-neutral-800">
-          <h3 className="text-xl font-bold mb-3">Live Data</h3>
-          
-          {/* Live Data Navigation */}
-          <div className="flex gap-4 mb-4">
-            {liveDataTabs.map((tab, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveLiveData(tab.id)}
-                className={`px-3 py-1 rounded text-sm transition-colors ${
-                  activeLiveData === tab.id
-                    ? 'bg-neutral-700 text-white'
-                    : 'bg-neutral-800 text-neutral-400 hover:text-neutral-200'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="bg-neutral-800 h-36 rounded p-4">
-            {feedData[activeLiveData]?.loading ? (
-              <div className="h-full flex flex-col items-center justify-center">
-                <div className="animate-pulse text-neutral-400">Loading...</div>
-              </div>
-            ) : feedData[activeLiveData]?.error ? (
-              <div className="h-full flex flex-col items-center justify-center">
-                <span className="text-red-400 text-sm">Error loading data</span>
-                <span className="text-neutral-500 text-xs mt-1">{feedData[activeLiveData].error}</span>
-              </div>
-            ) : activeLiveData === 'soil-moisture' ? (
-              // Single value display for soil moisture
-              <div className="h-full flex flex-col justify-between">
-                <div className="flex items-center justify-between">
-                  <span className="text-neutral-400 text-sm">{getCurrentTabInfo().label}</span>
-                  <span className="text-neutral-500 text-xs">
-                    {formatLastUpdated(feedData[activeLiveData]?.lastUpdated)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-center flex-1">
-                  <span className="text-5xl font-bold text-white">
-                    {feedData[activeLiveData]?.value?.toFixed(1) ?? '--'}
-                  </span>
-                  <span className="text-2xl text-neutral-400 ml-2">
-                    {getCurrentTabInfo().unit}
-                  </span>
-                </div>
-                <div className="flex items-center justify-center">
-                  <span className="text-neutral-500 text-xs">
-                    Data from Adafruit IO - Auto-refreshes every 30s
-                  </span>
-                </div>
-              </div>
-            ) : (
-              // Graph display for temperature and humidity
-              <div className="h-full flex flex-col justify-between">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-neutral-400 text-sm">{getCurrentTabInfo().label}</span>
-                    <span className="text-lg font-bold text-white">
-                      {feedData[activeLiveData]?.value?.toFixed(1) ?? '--'}{getCurrentTabInfo().unit}
-                    </span>
-                  </div>
-                  <span className="text-neutral-500 text-xs">
-                    {formatLastUpdated(feedData[activeLiveData]?.lastUpdated)}
-                  </span>
-                </div>
-                <div className="flex-1 flex items-center justify-center">
-                  <LineGraph
-                    data={feedData[activeLiveData]?.history}
-                    color={activeLiveData === 'temperature' ? '#f87171' : '#60a5fa'}
-                  />
-                </div>
-                <div className="flex items-center justify-between text-neutral-500 text-xs">
-                  <span>Last 25 readings</span>
-                  <span>Auto-refreshes every 30s</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
       </div>
 
       {/* Right Panel */}
-      <div className="w-4/6 flex items-center justify-center" style={{ backgroundColor: 'rgb(23, 23, 23)' }}>
+      <div className="w-4/6 flex" style={{ backgroundColor: 'rgb(23, 23, 23)' }}>
         <iframe
           src="https://editor.p5js.org/saragaviria99/full/1JdW6t0F3"
-          className="border-0"
+          className="border-0 w-full h-full"
           title="Species Game"
-          style={{ width: '1000px', height: '840px' }}
         />
       </div>
     </div>
