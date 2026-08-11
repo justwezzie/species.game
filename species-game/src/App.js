@@ -39,7 +39,8 @@ export default function SpeciesGameUI() {
     typeof window !== 'undefined' && window.innerHeight > window.innerWidth
   );
   const [showOnboarding, setShowOnboarding] = useState(true);
-  const [showLoading, setShowLoading] = useState(true);
+  const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  const [showLoading, setShowLoading] = useState(isMobile);
 
   // Live state broadcast out of the p5 sketch (see broadcastState() in sketch.js).
   // The sketch runs inside the p5 editor preview, so it posts to window.top and we
@@ -143,7 +144,7 @@ export default function SpeciesGameUI() {
     );
   }
 
-  if (isPortrait) {
+  if (isMobile && isPortrait) {
     return (
       <div className="flex flex-col items-center justify-center h-screen w-full text-white gap-8" style={{ backgroundColor: '#000' }}>
         <div style={{ position: 'relative', width: '120px', height: '120px' }}>
@@ -175,7 +176,7 @@ export default function SpeciesGameUI() {
           style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
           onClick={() => setShowOnboarding(false)}
         >
-          <div className="absolute flex items-center gap-2" style={{ top: '21px', left: '250px', color: '#fff' }}>
+          <div className="absolute flex items-center gap-2" style={{ top: '21px', left: isMobile ? '250px' : '370px', color: '#fff' }}>
             <span className="arrow-bounce-right" style={{ fontSize: '16px' }}>←</span>
             <span style={{ fontSize: '16px' }}>How to play</span>
           </div>
