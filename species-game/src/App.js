@@ -1,5 +1,35 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { ArrowUpRight } from 'lucide-react';
+
+const organisms = [
+  { name: 'Bacillus', type: 'Bacteria', description: 'Soil-dwelling bacteria that form endospores for survival.', image: '/cards-final/Bacillus.webp' },
+  { name: 'Streptomyces', type: 'Bacteria', description: 'Antibiotic-producing bacteria found in soil.', image: '/cards-final/Streptomyces.webp' },
+  { name: 'Acidobacteriota', type: 'Bacteria', description: 'Acidophilic bacteria thriving in low pH environments.', image: '/cards-final/Acidobacteriota.webp' },
+  { name: 'Pseudomonas', type: 'Bacteria', description: 'Versatile bacteria with diverse metabolic capabilities.', image: '/cards-final/Pseudomonas.webp' },
+  { name: 'Rhizobium', type: 'Bacteria', description: 'Nitrogen-fixing bacteria forming symbiosis with legumes.', image: '/cards-final/Rhizobium.webp' },
+  { name: 'Agaricales', type: 'Fungi', description: 'Order of mushroom-forming fungi including edible species.', image: '/cards-final/Agaricales.webp' },
+  { name: 'Eisenia Fetida', type: 'Worm', description: 'Composting worms important for soil aeration and decomposition.', image: '/cards-final/Eisenia-Fetida.webp' },
+  { name: 'Collembola', type: 'Arthropod', description: 'Springtails that help decompose organic material.', image: '/cards-final/Collembola.webp' },
+  { name: 'Hypnales', type: 'Moss', description: 'Order of pleurocarpous mosses growing in mats.', image: '/cards-final/Hypnales.webp' },
+  { name: 'Polypodiopsida', type: 'Fern', description: 'Class of true ferns with diverse species.', image: '/cards-final/Polypodiopsida.webp' },
+  { name: 'Asparagus', type: 'Plant', description: 'Perennial flowering plant used as a vegetable.', image: '/cards-final/Asparagus.webp' },
+  { name: 'Procris repens', type: 'Plant', description: 'Creeping herbaceous plant found in tropical regions.', image: '/cards-final/Procris-repens.webp' }
+];
+
+const typeGroups = {
+  Bacteria: 'Bacteria', Fungi: 'Fungi', Worm: 'Insects',
+  Arthropod: 'Insects', Moss: 'Plant', Fern: 'Plant', Plant: 'Plant',
+};
+
+const speciesIcons = {
+  ACIDOBACTERIA: '/icons/acidobacteriota.png', BACILLUS: '/icons/bacillus.png',
+  PSEUDOMONAS: '/icons/pseudomonas.png', RHIZOBIUM: '/icons/rhizobium.png',
+  STREPTOMYCES: '/icons/streptomyces.png', AGARICALES: '/icons/agaricales.png',
+  COLLEMBOLA: '/icons/collembola.png', EISENIA: '/icons/eisenia.png',
+  HYPNALES: '/icons/hypnales.png', POLYPODIOPSIDA: '/icons/polypodiopsida.png',
+  ASPARAGUS: '/icons/asparagus.png', PROCRIS: '/icons/procris.png'
+};
+
+const cardNameOverrides = { ACIDOBACTERIA: 'Acidobacteriota' };
 
 export default function SpeciesGameUI() {
   const [selectedSpecies, setSelectedSpecies] = useState(null);
@@ -48,122 +78,6 @@ export default function SpeciesGameUI() {
     return () => window.removeEventListener('resize', checkOrientation);
   }, []);
 
-  const species = [
-    { name: 'Bacteria', icon: '🦠', description: 'Microscopic organisms that play crucial roles in decomposition and nutrient cycling.' },
-    { name: 'Fungi', icon: '🍄', description: 'Thrives in moist, dark environments with neutral pH levels.' },
-    { name: 'Insects', icon: '🐛', description: 'Diverse arthropods that contribute to pollination and soil aeration.' },
-    { name: 'Plants', icon: '🌿', description: 'Photosynthetic organisms that form the base of most ecosystems.' }
-  ];
-
-  const organisms = [
-    {
-      name: 'Bacillus',
-      type: 'Bacteria',
-      description: 'Soil-dwelling bacteria that form endospores for survival.',
-      image: '/cards-final/Bacillus.webp'
-    },
-    {
-      name: 'Streptomyces',
-      type: 'Bacteria',
-      description: 'Antibiotic-producing bacteria found in soil.',
-      image: '/cards-final/Streptomyces.webp'
-    },
-    {
-      name: 'Acidobacteriota',
-      type: 'Bacteria',
-      description: 'Acidophilic bacteria thriving in low pH environments.',
-      image: '/cards-final/Acidobacteriota.webp'
-    },
-    {
-      name: 'Pseudomonas',
-      type: 'Bacteria',
-      description: 'Versatile bacteria with diverse metabolic capabilities.',
-      image: '/cards-final/Pseudomonas.webp'
-    },
-    {
-      name: 'Rhizobium',
-      type: 'Bacteria',
-      description: 'Nitrogen-fixing bacteria forming symbiosis with legumes.',
-      image: '/cards-final/Rhizobium.webp'
-    },
-    {
-      name: 'Agaricales',
-      type: 'Fungi',
-      description: 'Order of mushroom-forming fungi including edible species.',
-      image: '/cards-final/Agaricales.webp'
-    },
-    {
-      name: 'Eisenia Fetida',
-      type: 'Worm',
-      description: 'Composting worms important for soil aeration and decomposition.',
-      image: '/cards-final/Eisenia-Fetida.webp'
-    },
-    {
-      name: 'Collembola',
-      type: 'Arthropod',
-      description: 'Springtails that help decompose organic material.',
-      image: '/cards-final/Collembola.webp'
-    },
-    {
-      name: 'Hypnales',
-      type: 'Moss',
-      description: 'Order of pleurocarpous mosses growing in mats.',
-      image: '/cards-final/Hypnales.webp'
-    },
-    {
-      name: 'Polypodiopsida',
-      type: 'Fern',
-      description: 'Class of true ferns with diverse species.',
-      image: '/cards-final/Polypodiopsida.webp'
-    },
-    {
-      name: 'Asparagus',
-      type: 'Plant',
-      description: 'Perennial flowering plant used as a vegetable.',
-      image: '/cards-final/Asparagus.webp'
-    },
-    {
-      name: 'Procris repens',
-      type: 'Plant',
-      description: 'Creeping herbaceous plant found in tropical regions.',
-      image: '/cards-final/Procris-repens.webp'
-    }
-  ];
-
-  const typeGroups = {
-    Bacteria: 'Bacteria',
-    Fungi: 'Fungi',
-    Worm: 'Insects',
-    Arthropod: 'Insects',
-    Moss: 'Plant',
-    Fern: 'Plant',
-    Plant: 'Plant',
-  };
-
-  // 20px icons in public/icons, cropped from new-imgs at 2x (40px) for retina.
-  // Keyed by the sketch's SPECIES name, which doesn't always match the card
-  // name (ACIDOBACTERIA -> the Acidobacteriota artwork).
-  const speciesIcons = {
-    ACIDOBACTERIA: '/icons/acidobacteriota.png',
-    BACILLUS: '/icons/bacillus.png',
-    PSEUDOMONAS: '/icons/pseudomonas.png',
-    RHIZOBIUM: '/icons/rhizobium.png',
-    STREPTOMYCES: '/icons/streptomyces.png',
-    AGARICALES: '/icons/agaricales.png',
-    COLLEMBOLA: '/icons/collembola.png',
-    EISENIA: '/icons/eisenia.png',
-    HYPNALES: '/icons/hypnales.png',
-    POLYPODIOPSIDA: '/icons/polypodiopsida.png',
-    ASPARAGUS: '/icons/asparagus.png',
-    PROCRIS: '/icons/procris.png'
-  };
-
-  // Where the sketch's SPECIES name doesn't match a card name, say which card
-  // a live-population row should open. Display name is unaffected.
-  const cardNameOverrides = {
-    ACIDOBACTERIA: 'Acidobacteriota'
-  };
-
   // The sketch identifies species by a numeric id; speciesMap is its SPECIES constant
   // (e.g. { ACIDOBACTERIA: 0, BACILLUS: 1, ... }), so invert it to label the counts.
   const liveCounts = useMemo(() => {
@@ -196,7 +110,7 @@ export default function SpeciesGameUI() {
         };
       })
       .sort((a, b) => b.count - a.count);
-  }, [gameStats, organisms, typeGroups, speciesIcons, cardNameOverrides]);
+  }, [gameStats]);
 
   if (showLoading) {
     return (
